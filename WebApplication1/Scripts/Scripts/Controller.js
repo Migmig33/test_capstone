@@ -1,4 +1,4 @@
-﻿app.controller('controller', function (service, $scope, $timeout, $interval, $http, $sce, $window) {
+﻿app.controller('controller', function (service, InputRules, $scope, $timeout, $interval, $http, $sce, $window) {
 
 
 
@@ -15,6 +15,14 @@
         $timeout(function () {
             $scope.toastShow = false;
         }, 8000);
+    };
+
+    // Runs the input rules on every visible field under this controller (see InputRules.js).
+    // Each bad field shows its own message inline; this adds one toast and returns true.
+    $scope.hasInvalidInputs = function (group) {
+        var errors = InputRules.collect($scope, group);
+        if (errors.length) $scope.showToast("Please correct the highlighted fields.", "error");
+        return errors.length > 0;
     };
 
     //var systemRefreshTimer = setInterval(function () {
@@ -362,13 +370,19 @@
     }
 
     $scope.authFunc = function () {
-        if (!$scope.email || !$scope.password) {
+        if (!$scope.password) {
             return $scope.showToast("Please fill out email and password", "error");
         }
+        if ($scope.hasInvalidInputs()) return;
         $scope.loading = true;
         var authData = { email: $scope.email, password: $scope.password };
         service.authService(authData).then(function (response) {
-            if (response.data.success) {
+            if (response.data.success && response.data.otpRequired === false) {
+                // Set only by the server, for the exempt tenant account after its password was verified.
+                // The session is already signed in, so go straight to the portal.
+                $scope.showToast("Welcome Back, Tenant!", "success");
+                $scope.goTo('TenantPortal');
+            } else if (response.data.success) {
                 $scope.userRole = response.data.role;
                 $scope.step = 'verify';
                 $scope.otp = [];
@@ -587,18 +601,15 @@
     };
 
     $scope.saveUnit = function (id) {
+        if ($scope.hasInvalidInputs()) return;
+
         var unitData = {
-            unitName: $scope.unitName, price: $scope.price, beds: $scope.beds,
-            sqm: $scope.sqm, floor: $scope.floor, description: $scope.description,
+            unitName: InputRules.normalize('code', $scope.unitName), price: Number($scope.price), beds: $scope.beds,
+            sqm: Number($scope.sqm), floor: InputRules.normalize('code', $scope.floor), description: InputRules.normalize('description', $scope.description),
             videoUrl: $scope.videoUrl, colorCode: $scope.colorCode, status: $scope.status,
-            address: $scope.address, maxOccupants: $scope.maxOccupants
+            address: InputRules.normalize('address', $scope.address), maxOccupants: Number($scope.maxOccupants)
         };
 
-        if (!$scope.unitName) return $scope.showToast("Unit Name is required", "error");
-        if (!$scope.price || $scope.price <= 0) return $scope.showToast("Price must be greater than 0", "error");
-        if (!$scope.floor) return $scope.showToast("Floor is required", "error");
-        if (!$scope.sqm || $scope.sqm <= 0) return $scope.showToast("Size (sqm) must be greater than 0", "error");
-        if (!$scope.maxOccupants || $scope.maxOccupants < 1 || $scope.maxOccupants > 20) return $scope.showToast("Max Occupants must be between 1 and 20", "error");
         $scope.isLoading = true;
         var amenityIds = $scope.selectedAmenities().map(function (a) {
             return a.id || a.Id || a.amenityId;
@@ -939,8 +950,7 @@
         };
 
         // ---- Validation ----
-        if (!$scope.name) return $scope.showToast("Full Name is required", "error");
-        if (!$scope.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($scope.email)) return $scope.showToast("Valid email is required", "error");
+        if ($scope.hasInvalidInputs()) return;
         if (!$scope.occupancyTypeId) return $scope.showToast("Please select an Occupancy Type", "error");
         if (!$scope.unitId) return $scope.showToast("Please select a unit", "error");
         if (!$scope.leaseStart) return $scope.showToast("Lease Start date is required", "error");
@@ -971,14 +981,14 @@
         }
 
         var tenantData = {
-            name: $scope.name,
-            email: $scope.email,
-            phone: $scope.phone,
+            name: InputRules.normalize('name', $scope.name),
+            email: InputRules.normalize('email', $scope.email),
+            phone: InputRules.normalize('phone', $scope.phone) || null,
             unitId: $scope.unitId,
             leaseStart: formatToDateString($scope.leaseStart),
             leaseEnd: formatToDateString($scope.leaseEnd),
-            address: $scope.address,
-            occupation: $scope.occupation,
+            address: InputRules.normalize('address', $scope.address) || null,
+            occupation: InputRules.normalize('occupation', $scope.occupation) || null,
             passwordHash: $scope.passwordHash,
             occupancyTypeId: $scope.occupancyTypeId,
             deletedCoOccupants: $scope.deletedCoOccupants
@@ -986,7 +996,14 @@
 
         // Single sends none; Household and Bedspace both send co-occupants.
         var occupantsToSend = $scope.usesCoOccupants($scope.occupancyTypeId)
-            ? ($scope.co_occupants || [])
+            ? ($scope.co_occupants || []).map(function (occupant) {
+                return {
+                    id: occupant.id,
+                    name: InputRules.normalize('name', occupant.name),
+                    phone: InputRules.normalize('phone', occupant.phone),
+                    address: InputRules.normalize('address', occupant.address) || null
+                };
+            })
             : [];
 
         var targetTid = id || ($scope.editingTenant ? $scope.editingTenant.Tid : null);
@@ -1150,8 +1167,9 @@
     };
 
     $scope.submitDecline = function () {
+        if ($scope.declineReason === 'Other' && $scope.hasInvalidInputs()) return;
         $scope.declineLoading = true;
-        var finalReason = $scope.declineReason === 'Other' ? $scope.declineCustom : $scope.declineReason;
+        var finalReason = $scope.declineReason === 'Other' ? InputRules.normalize('description', $scope.declineCustom) : $scope.declineReason;
 
         service.DeclineBookingService($scope.declineTarget.id, finalReason).then(function (response) {
             if (response.data.success) {
@@ -1405,10 +1423,11 @@
     };
 
     $scope.submitAddRequest = function () {
-        if (!$scope.unitId || !$scope.description) {
-            $scope.showToast("Please select a unit and provide a description.", "error");
+        if (!$scope.unitId) {
+            $scope.showToast("Please select a unit.", "error");
             return;
         }
+        if ($scope.hasInvalidInputs()) return;
 
         $scope.isSubmitting = true;
 
@@ -1418,7 +1437,7 @@
             Tid: $scope.Tid,
             category: $scope.category,
             priority: $scope.priority,
-            description: $scope.description
+            description: InputRules.normalize('description', $scope.description)
         };
 
         service.SaveMaintenanceRequestService(payload, null).then(function (response) {
@@ -1460,6 +1479,13 @@
     $scope.submitSchedule = function () {
         if (!$scope.schedDate || !$scope.schedTime) {
             $scope.showToast("Please select both a date and a time.", "error");
+            return;
+        }
+
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (new Date($scope.schedDate) < today) {
+            $scope.showToast("The scheduled date cannot be in the past.", "error");
             return;
         }
 
@@ -2016,10 +2042,7 @@
         reqCategory: ""    
     }
     $scope.handleSubmitRequest = function () {
-        if (!$scope.requestForm.reqDescription) {
-            $scope.showToast("Please describe the issue.", "error");
-            return;
-        }
+        if ($scope.hasInvalidInputs('maintenance')) return;
         if (!$scope.currentTenant) {
             $scope.showToast("System error: Tenant data not loaded.", "error");
             return;
@@ -2475,20 +2498,14 @@
     }
 
     $scope.bkSendOtp = function () {
-        $scope.bkErrors = {};
-
-        if (!$scope.bkName) $scope.bkErrors.name = "Full name is required";
-        if (!$scope.bkEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($scope.bkEmail)) $scope.bkErrors.email = "Valid email is required";
-        if (!$scope.bkPhone) $scope.bkErrors.phone = "Phone number is required";
-
-        if (Object.keys($scope.bkErrors).length > 0) return;
+        if ($scope.hasInvalidInputs()) return;
 
         $scope.bkLoading = true;
 
         var authData = {
-            name: $scope.bkName,
-            email: $scope.bkEmail,
-            phone: $scope.bkPhone
+            name: InputRules.normalize('name', $scope.bkName),
+            email: InputRules.normalize('email', $scope.bkEmail),
+            phone: InputRules.normalize('phone', $scope.bkPhone)
         };
 
         service.SendVisitorOtpService(authData).then(function (response) {
@@ -2635,13 +2652,14 @@
 
     $scope.bkSubmit = function () {
         if (!$scope.bkSelectedDate || !$scope.bkSelectedSlot) return;
+        if ($scope.hasInvalidInputs()) return;
 
         $scope.bkSubmitting = true;
 
         var payload = {
             date: $scope.bkSelectedDate,
             slot: $scope.bkSelectedSlot,
-            notes: $scope.bkNotes,
+            notes: InputRules.normalize('description', $scope.bkNotes),
             bedspaceConfirmed: $scope.bkBedspaceConfirmed
         };
 
@@ -2786,20 +2804,14 @@
     }
 
     $scope.mbSendOtp = function () {
-        $scope.mbErrors = {};
-
-        if (!$scope.mbSignInName) $scope.mbErrors.name = "Full name is required";
-        if (!$scope.mbSignInEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($scope.mbSignInEmail)) $scope.mbErrors.email = "Valid email is required";
-        if (!$scope.mbSignInPhone) $scope.mbErrors.phone = "Phone number is required";
-
-        if (Object.keys($scope.mbErrors).length > 0) return;
+        if ($scope.hasInvalidInputs()) return;
 
         $scope.mbLoading = true;
 
         var authData = {
-            name: $scope.mbSignInName,
-            email: $scope.mbSignInEmail,
-            phone: $scope.mbSignInPhone
+            name: InputRules.normalize('name', $scope.mbSignInName),
+            email: InputRules.normalize('email', $scope.mbSignInEmail),
+            phone: InputRules.normalize('phone', $scope.mbSignInPhone)
         };
 
         service.SendVisitorOtpService(authData).then(function (response) {
@@ -2881,6 +2893,8 @@
     };
 
     $scope.mbConfirmCancel = function () {
+        if ($scope.mbCancelReason === 'Other' && $scope.hasInvalidInputs()) return;
+
         var finalReason = ($scope.mbCancelReason === 'Other')
             ? ($scope.mbCustomReason || '').trim()
             : $scope.mbCancelReason;
@@ -2966,9 +2980,7 @@
     }
 
     $scope.sendResetCode = function () {
-        if (!$scope.fpEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($scope.fpEmail)) {
-            return $scope.showToast("Please enter a valid email address.", "error");
-        }
+        if ($scope.hasInvalidInputs()) return;
 
         $scope.fpLoading = true;
 
@@ -3038,9 +3050,7 @@
     };
 
     $scope.resetPassword = function () {
-        if (!$scope.fpNewPw || $scope.fpNewPw.length < 8) {
-            return $scope.showToast("Password must be at least 8 characters.", "error");
-        }
+        if ($scope.hasInvalidInputs()) return;
         if ($scope.fpNewPw !== $scope.fpConfirmPw) {
             return $scope.showToast("Passwords do not match.", "error");
         }
@@ -3175,18 +3185,21 @@
 
     $scope.validateForm = function () {
         var e = {}, f = $scope.form;
-        if (!f.name || !f.name.trim()) e.name = 'Name is required.';
-        if (!f.email || !f.email.trim()) e.email = 'Email is required.';
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = 'Enter a valid email.';
+        var nameError = InputRules.validate('name', f.name, { label: 'Full name', required: true });
+        if (nameError) e.name = nameError;
+
+        var emailError = InputRules.validate('email', f.email, { label: 'Email', required: true });
+        if (emailError) e.email = emailError;
+
         if (f.role !== 1 && f.role !== 2) e.role = 'Select a valid role.';
 
-        if ($scope.modalMode === 'create') {
-            if (!f.password) e.password = 'Password is required.';
-            else if (f.password.length < 8) e.password = 'Min. 8 characters.';
-            if (f.password !== f.confirmPassword) e.confirmPassword = 'Passwords do not match.';
-        } else if (f.password) {
-            if (f.password.length < 8) e.password = 'Min. 8 characters.';
-            if (f.password !== f.confirmPassword) e.confirmPassword = 'Passwords do not match.';
+        // Required when creating; optional when editing (blank keeps the current password).
+        var passwordError = InputRules.validate('password', f.password, {
+            label: 'Password', required: $scope.modalMode === 'create', min: 8, max: 64
+        });
+        if (passwordError) e.password = passwordError;
+        if ((f.password || f.confirmPassword) && f.password !== f.confirmPassword) {
+            e.confirmPassword = 'Passwords do not match.';
         }
         $scope.formErrors = e;
         return Object.keys(e).length === 0;
@@ -3271,12 +3284,9 @@
     };
 
     $scope.addAmenity = function () {
-        var value = ($scope.amenityForm.name || '').trim();
+        var value = InputRules.normalize('code', $scope.amenityForm.name);
         if ($scope.addingAmenity) return;
-        if (!value) {
-            $scope.showToast('Enter an amenity name.', 'info');
-            return;
-        }
+        if ($scope.hasInvalidInputs()) return;
 
         var exists = $scope.amenities.some(function (a) {
             return a.name.toLowerCase() === value.toLowerCase();
@@ -3382,25 +3392,6 @@
         }
     };
 
-    $scope.allowLetterOnly = function ($event) {
-        var input = $event.target;
-        var value = input.value;
-
-        // Allow letters and spaces only
-        var cleaned = value.replace(/[^\p{L}\s]/gu, '');
-
-        if (value !== cleaned) {
-            var cursor = input.selectionStart;
-            var removedBeforeCursor = value.slice(0, cursor)
-                .replace(/[^\p{L}\s]/gu, '').length;
-
-            $scope.bkName = cleaned;
-
-            setTimeout(function () {
-                input.setSelectionRange(removedBeforeCursor, removedBeforeCursor);
-            }, 0);
-        }
-    };
 
 
     //notify of failed pdc payments
@@ -3461,30 +3452,7 @@
 
     $scope.handleSaveProfile = function () {
         // ---- Validation ----
-        if (!$scope.currentTenant.phone) {
-
-            return $scope.showToast("Number cannot be empty", "error");
-        }
-
-        if (
-            !$scope.currentTenant.email ||
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($scope.currentTenant.email)
-        ) {
-
-            return $scope.showToast("Valid email is required", "error");
-
-        }
-
-        if (!$scope.currentTenant.occupation) {
-
-            return $scope.showToast("Occupation cannot be empty", "error");
-
-        }
-
-        if (!$scope.currentTenant.address) {
-
-            return $scope.showToast("Address cannot be empty", "error");
-        }
+        if ($scope.hasInvalidInputs('profile')) return;
 
         if (!reason || !reason.trim()) {
 
@@ -3493,10 +3461,10 @@
 
         var data = {
             id: $scope.id,
-            requestedEmail: $scope.currentTenant.email,
-            requestedPhone: $scope.currentTenant.phone,
-            requestedOccupation: $scope.currentTenant.occupation,
-            requestedAddress: $scope.currentTenant.address,
+            requestedEmail: InputRules.normalize('email', $scope.currentTenant.email),
+            requestedPhone: InputRules.normalize('phone', $scope.currentTenant.phone),
+            requestedOccupation: InputRules.normalize('occupation', $scope.currentTenant.occupation),
+            requestedAddress: InputRules.normalize('address', $scope.currentTenant.address),
             reason: reason.trim(),
             status: $scope.status || "pending",
             reviewNotes: $scope.reviewNotes || null
@@ -3645,6 +3613,10 @@
         alert(id + status + Tid + reviewNotes)
         if (status == null) {
             return $scope.showToast("Invalid status request", "error");
+        }
+        var reviewError = InputRules.validate('description', reviewNotes, { label: 'Review note', required: true, max: 1000 });
+        if (reviewError) {
+            return $scope.showToast(reviewError, "error");
         }
         var data = {
             id: id,

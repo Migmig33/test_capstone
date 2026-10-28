@@ -254,6 +254,7 @@
     <Compile Include="Helper\AuditLogger.cs" />
     <Compile Include="Helper\CacheHelper.cs" />
     <Compile Include="Helper\UnitAvailabilityHelper.cs" />
+    <Compile Include="Helper\InputValidator.cs" />
     <Compile Include="Models\Context\DB_Context.cs" />
     <Compile Include="Models\LoginModelDTO.cs" />
     <Compile Include="Models\Maps\admin_maps.cs" />
@@ -1141,6 +1142,7 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Scripts\Scripts\Controller.js" />
+    <Content Include="Scripts\Scripts\InputRules.js" />
     <Content Include="Scripts\Scripts\Module.js" />
     <Content Include="Scripts\Scripts\ModuleTenant.js" />
     <Content Include="Scripts\Scripts\RentersController.js" />

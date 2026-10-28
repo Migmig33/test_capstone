@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>@ViewBag.Title</title>
+    <title>@(string.IsNullOrEmpty((string)ViewBag.Title) ? "GreenRent" : (string)ViewBag.Title + " - GreenRent")</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -169,8 +169,9 @@
         <script src="~/Scripts/jquery-3.7.0.min.js"></script>
         <script src="~/Scripts/angular.min.js"></script>
         <script src="@Url.Content("~/Scripts/Scripts/Module.js")?v=20260911-amenities-submit-fix"></script>
+        <script src="@Url.Content("~/Scripts/Scripts/InputRules.js?v=20261028-input-rules")"></script>
         <script src="@Url.Content("~/Scripts/Scripts/Service.js")?v=20260911-amenities-submit-fix"></script>
-        <script src="@Url.Content("~/Scripts/Scripts/Controller.js")?v=20260911-amenities-scope-fix"></script>
+        <script src="@Url.Content("~/Scripts/Scripts/Controller.js?v=20261028-input-rules")"></script>
         <script src="~/Scripts/Chart.min.js"></script>
         <script src="~/Scripts/angular-chart.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -101,10 +101,10 @@
                                     <circle cx="12" cy="7" r="4" />
                                 </svg>
                                 <input type="text" ng-model="mbSignInName" placeholder="Your full name"
+                                       input-rule="name" input-rule-label="Full name" input-rule-required
                                        ng-class="{'border-red-300 bg-red-50': mbErrors.name, 'border-slate-200 bg-slate-50': !mbErrors.name}"
                                        class="w-full pl-9 pr-3 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition-all" />
                             </div>
-                            <p ng-if="mbErrors.name" class="text-red-500 text-xs mt-0.5">{{ mbErrors.name }}</p>
                         </div>
 
                         <div>
@@ -114,11 +114,11 @@
                                     <rect width="20" height="16" x="2" y="4" rx="2" />
                                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                                 </svg>
-                                <input type="email" ng-model="mbSignInEmail" placeholder="you@example.com"
+                                <input type="text" ng-model="mbSignInEmail" placeholder="you@example.com" inputmode="email"
+                                       input-rule="email" input-rule-label="Email" input-rule-required
                                        ng-class="{'border-red-300 bg-red-50': mbErrors.email, 'border-slate-200 bg-slate-50': !mbErrors.email}"
                                        class="w-full pl-9 pr-3 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition-all" />
                             </div>
-                            <p ng-if="mbErrors.email" class="text-red-500 text-xs mt-0.5">{{ mbErrors.email }}</p>
                         </div>
 
                         <div>
@@ -127,11 +127,11 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
                                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                                 </svg>
-                                <input type="tel" ng-model="mbSignInPhone" placeholder="09XX-XXX-XXXX"
+                                <input type="text" ng-model="mbSignInPhone" placeholder="09XXXXXXXXX" inputmode="numeric"
+                                       input-rule="phone" input-rule-label="Phone number" input-rule-required
                                        ng-class="{'border-red-300 bg-red-50': mbErrors.phone, 'border-slate-200 bg-slate-50': !mbErrors.phone}"
                                        class="w-full pl-9 pr-3 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-green-500 transition-all" />
                             </div>
-                            <p ng-if="mbErrors.phone" class="text-red-500 text-xs mt-0.5">{{ mbErrors.phone }}</p>
                         </div>
 
                         <button ng-click="mbSendOtp()" ng-disabled="mbLoading"
@@ -174,7 +174,7 @@
                                id="mbOtp{{ i }}"
                                type="text"
                                inputmode="numeric"
-                               maxlength="1"
+                               input-rule="digit"
                                ng-model="mbOtp[i]"
                                ng-change="mbOtpNext(i)"
                                class="w-10 text-center text-lg font-bold border-2 border-slate-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all bg-slate-50 text-slate-900"
@@ -427,6 +427,7 @@
 
                             <div ng-if="mbCancelReason === 'Other'" class="mb-3">
                                 <textarea ng-model="mbCustomReason" rows="2"
+                                          input-rule="description" input-rule-label="Reason" input-rule-max="300" input-rule-required
                                           placeholder="Please describe your reason…"
                                           class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"></textarea>
                             </div>

@@ -107,6 +107,13 @@ namespace WebApplication1.Controllers
             [HttpPost]
             public JsonResult SubmitMaintenanceRequest(maintenance_request req)
             {
+                string inputError = InputValidator.FirstError(
+                    InputValidator.Description(req.description, "Description", true, 100),
+                    InputValidator.Code(req.category, "Category", true, 100));
+                if (inputError != null)
+                    return Json(new { success = false, message = inputError });
+                req.description = InputValidator.CleanDescription(req.description);
+
                 try
                 {
                     // Validate security
@@ -165,6 +172,20 @@ namespace WebApplication1.Controllers
         }
         public JsonResult SaveTenantProfileChangeRequest(tenant_profile_change_request data)
         {
+            string inputError = InputValidator.FirstError(
+                InputValidator.Email(data.requestedEmail, "Email"),
+                InputValidator.Phone(data.requestedPhone, "Phone number", true),
+                InputValidator.Occupation(data.requestedOccupation, "Occupation", true, 25),
+                InputValidator.Address(data.requestedAddress, "Address", true, 150),
+                InputValidator.Description(data.reason, "Reason", true, 1000));
+            if (inputError != null)
+                return Json(new { success = false, message = inputError });
+            data.requestedEmail = data.requestedEmail.Trim();
+            data.requestedPhone = InputValidator.CleanText(data.requestedPhone);
+            data.requestedOccupation = InputValidator.CleanText(data.requestedOccupation);
+            data.requestedAddress = InputValidator.CleanText(data.requestedAddress);
+            data.reason = InputValidator.CleanDescription(data.reason);
+
             try
             {
                 using(var connect = new DB_Context())

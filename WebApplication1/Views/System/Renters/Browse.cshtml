@@ -102,9 +102,11 @@
                 <div>
                     <p class="text-sm text-slate-700 font-medium mb-2">Price Range (₱/mo)</p>
                     <div class="flex gap-3 items-center">
-                        <input type="number" ng-model="browsePriceMin" ng-model-options="{ debounce: 300 }" placeholder="Min" class="w-28 px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                        <input type="text" inputmode="decimal" ng-model="browsePriceMin" ng-model-options="{ debounce: 300 }" placeholder="Min"
+                               input-rule="decimal" input-rule-label="Minimum price" input-rule-min="0" input-rule-max="999999.99" class="w-28 px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                         <span class="text-slate-400">—</span>
-                        <input type="number" ng-model="browsePriceMax" ng-model-options="{ debounce: 300 }" placeholder="Max" class="w-28 px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                        <input type="text" inputmode="decimal" ng-model="browsePriceMax" ng-model-options="{ debounce: 300 }" placeholder="Max"
+                               input-rule="decimal" input-rule-label="Maximum price" input-rule-min="0" input-rule-max="999999.99" class="w-28 px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                     </div>
                 </div>
 
@@ -177,10 +179,15 @@
                         </svg>
                     </div>
 
-                    <span ng-if="unit.joinable == true" class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-medium  border text-amber-700 border-amber-100 bg-amber-50">
+                    <!-- Bedspace indicator -->
+                    <span ng-if="unit.joinable"
+                          class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                         Bedspace
                     </span>
-                    <span ng-if="unit.joinable == false" class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-medium border border-emerald-100 bg-emerald-50 text-emerald-700">
+
+                    <!-- Vacant indicator -->
+                    <span ng-if="!unit.joinable"
+                          class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
                         Vacant
                     </span>
 

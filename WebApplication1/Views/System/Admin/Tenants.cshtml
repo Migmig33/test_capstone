@@ -515,23 +515,24 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm text-slate-700 font-medium mb-1">Full Name *</label>
-                    <input type="text" id="fieldName" ng-model="name" placeholder="Full name" ng-keyup="allowLettersOnly($event)"
-                           maxlength="50" oninput="this.value = this.value.replace(/[^a-zA-Z\sñÑ]/g, '')"
+                    <input type="text" id="fieldName" ng-model="name" placeholder="Full name"
+                           input-rule="name" input-rule-label="Full name" input-rule-required
                            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                     <p class="text-[10px] text-right mt-1" ng-class="name.length >= 50 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ name.length || 0 }}/50</p>
                 </div>
 
                 <div>
                     <label class="block text-sm text-slate-700 font-medium mb-1">Email *</label>
-                    <input type="email" id="fieldEmail" ng-model="email" placeholder="email@example.com" maxlength="50"
+                    <input type="text" id="fieldEmail" ng-model="email" placeholder="email@example.com" inputmode="email"
+                           input-rule="email" input-rule-label="Email" input-rule-required
                            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
-                    <p class="text-[10px] text-right mt-1" ng-class="email.length >= 50 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ email.length || 0 }}/50</p>
+                    <p class="text-[10px] text-right mt-1" ng-class="email.length >= 100 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ email.length || 0 }}/100</p>
                 </div>
 
                 <div>
                     <label class="block text-sm text-slate-700 font-medium mb-1">Phone</label>
-                    <input type="number" id="fieldPhone" ng-model="phone" placeholder="09XXXXXXXXX"
-                           maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    <input type="text" id="fieldPhone" ng-model="phone" placeholder="09XXXXXXXXX" inputmode="numeric"
+                           input-rule="phone" input-rule-label="Phone number"
                            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                     <p class="text-[10px] text-right mt-1" ng-class="phone.length >= 11 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ phone.length || 0 }}/11</p>
                 </div>
@@ -582,14 +583,16 @@
 
                 <div>
                     <label class="block text-sm text-slate-700 font-medium mb-1">Address</label>
-                    <input type="text" id="fieldAddress" ng-model="address" placeholder="City, Province" maxlength="100"
+                    <input type="text" id="fieldAddress" ng-model="address" placeholder="City, Province"
+                           input-rule="address" input-rule-label="Address" input-rule-max="100"
                            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                     <p class="text-[10px] text-right mt-1" ng-class="address.length >= 100 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ address.length || 0 }}/100</p>
                 </div>
 
                 <div>
                     <label class="block text-sm text-slate-700 font-medium mb-1">Occupation</label>
-                    <input type="text" id="fieldOccupation" ng-model="occupation" placeholder="e.g. Engineer" maxlength="25"
+                    <input type="text" id="fieldOccupation" ng-model="occupation" placeholder="e.g. Engineer"
+                           input-rule="occupation" input-rule-label="Occupation"
                            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
                     <p class="text-[10px] text-right mt-1" ng-class="occupation.length >= 25 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ occupation.length || 0 }}/25</p>
                 </div>
@@ -600,7 +603,7 @@
                     <input type="password" id="fieldPasswordHash" ng-model="passwordHash"
                            ng-disabled="editingTenant"
                            placeholder="{{ editingTenant ? '••••••••' : 'Set a login password' }}"
-                           maxlength="20"
+                           input-rule="password" input-rule-label="Portal password" input-rule-min="0" input-rule-max="20"
                            ng-class="editingTenant ? 'opacity-60 cursor-not-allowed bg-slate-100' : 'bg-slate-50'"
                            class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
 
@@ -661,22 +664,22 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <label class="block text-xs text-slate-600 font-medium mb-1">Full Name *</label>
-                            <input type="text" ng-model="occ.name" placeholder="Full name" ng-keyup="allowLettersOnly($event)"
-                                   maxlength="50" oninput="this.value = this.value.replace(/[^a-zA-Z\sñÑ]/g, '')"
+                            <input type="text" ng-model="occ.name" placeholder="Full name"
+                                   input-rule="name" input-rule-label="Occupant name" input-rule-required
                                    class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
                             <p class="text-[10px] text-right mt-1" ng-class="occ.name.length >= 50 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ occ.name.length || 0 }}/50</p>
                         </div>
                         <div>
                             <label class="block text-xs text-slate-600 font-medium mb-1">Phone *</label>
-                            <input type="number" ng-model="occ.phone" placeholder="09XXXXXXXXX"
-                                   maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                            <input type="text" ng-model="occ.phone" placeholder="09XXXXXXXXX" inputmode="numeric"
+                                   input-rule="phone" input-rule-label="Occupant phone" input-rule-required
                                    class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
                             <p class="text-[10px] text-right mt-1" ng-class="occ.phone.length >= 11 ? 'text-red-500 font-bold' : 'text-slate-400'">{{ occ.phone.length || 0 }}/11</p>
                         </div>
                         <div>
                             <label class="block text-xs text-slate-600 font-medium mb-1">Address</label>
                             <input type="text" ng-model="occ.address" placeholder="City, Province"
-                                   maxlength="50"
+                                   input-rule="address" input-rule-label="Occupant address" input-rule-max="50"
                                    class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
                         </div>
                     </div>
@@ -1033,7 +1036,7 @@
 
                             <textarea ng-model="request.reviewNotes"
                                       rows="3"
-                                      maxlength="1000"
+                                      input-rule="description" input-rule-label="Review note" input-rule-max="1000" input-rule-required
                                       placeholder="Enter your reason for accepting or declining this request..."
                                       class="w-full resize-y rounded-lg border border-gray-300 px-4 py-3 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-100">
                             </textarea>

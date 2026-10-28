@@ -179,6 +179,11 @@ namespace WebApplication1.Controllers
                               List<IdFileDto> idFiles, List<int> deletedDocumentIds, int? id,
                               List<HttpPostedFileBase> idUploads = null)
         {
+            // Server-side input rules. They run before any file or database write.
+            string inputError = CheckAndCleanTenant(tenantData, coOccupants);
+            if (inputError != null)
+                return Json(new { success = false, message = inputError }, JsonRequestBehavior.AllowGet);
+
             var uploadedPaths = new List<string>();
             bool committed = false;
             try
@@ -547,6 +552,10 @@ namespace WebApplication1.Controllers
         [HttpPost]
         public JsonResult SaveUnit(unit data, List<string> imageUrls, string amenityIds, int? id)
         {
+            string inputError = CheckAndCleanUnit(data);
+            if (inputError != null)
+                return Json(new { success = false, message = inputError }, JsonRequestBehavior.AllowGet);
+
             try
             {
                 using (var connect = new DB_Context())
@@ -700,6 +709,11 @@ namespace WebApplication1.Controllers
         [HttpPost]
         public JsonResult DeclineBooking(int id, string reason)
         {
+            string reasonError = InputValidator.Description(reason, "Reason", true, 300);
+            if (reasonError != null)
+                return Json(new { success = false, message = reasonError });
+            reason = InputValidator.CleanDescription(reason);
+
             using (var connect = new DB_Context())
             {
                 var booking = connect.booking.FirstOrDefault(b => b.id == id);
@@ -819,6 +833,10 @@ namespace WebApplication1.Controllers
         [HttpPost]
         public JsonResult SaveMaintenanceRequest(maintenance_request requestData, int? id)
         {
+            string inputError = CheckAndCleanMaintenance(requestData);
+            if (inputError != null)
+                return Json(new { success = false, message = inputError }, JsonRequestBehavior.AllowGet);
+
             try
             {
                 using (var connect = new DB_Context())
@@ -879,6 +897,9 @@ namespace WebApplication1.Controllers
         [HttpPost]
         public JsonResult MarkPaymentsPaid(int Tid, int Uid, decimal amount, List<MonthItem> months)
         {
+            if (amount <= 0 || amount > 99999999.99m || decimal.Round(amount, 2) != amount)
+                return Json(new { success = false, message = "Amount must be a positive amount with at most 2 decimal places." });
+
             try
             {
                 using (var db = new DB_Context())
@@ -1202,10 +1223,11 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(name))
-                    return Json(new { success = false, message = "Amenity name is required." });
+                string nameError = InputValidator.Code(name, "Amenity name", true, 100);
+                if (nameError != null)
+                    return Json(new { success = false, message = nameError });
 
-                name = name.Trim();
+                name = InputValidator.CleanText(name);
                 if (name.Length > 100)
                     return Json(new { success = false, message = "Amenity names cannot exceed 100 characters." });
 
@@ -2181,6 +2203,11 @@ namespace WebApplication1.Controllers
         [HttpPost]
         public JsonResult CancelMyBooking(int id, string reason)
         {
+            string reasonError = InputValidator.Description(reason, "Reason", true, 300);
+            if (reasonError != null)
+                return Json(new { success = false, message = reasonError });
+            reason = InputValidator.CleanDescription(reason);
+
             try
             {
                 bool verified = Session["VisitorVerified"] != null && (bool)Session["VisitorVerified"];
@@ -2302,12 +2329,16 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                if (data == null || string.IsNullOrWhiteSpace(data.name))
-                    return Json(new { success = false, message = "Name is required." });
-                if (string.IsNullOrWhiteSpace(data.email) || !data.email.Contains("@"))
-                    return Json(new { success = false, message = "Valid email is required." });
-                if (string.IsNullOrWhiteSpace(data.password) || data.password.Length < 8)
-                    return Json(new { success = false, message = "Password must be at least 8 characters." });
+                if (data == null)
+                    return Json(new { success = false, message = "Account data is missing." });
+                string accountError = InputValidator.FirstError(
+                    InputValidator.Name(data.name, "Full name"),
+                    InputValidator.Email(data.email, "Email"),
+                    InputValidator.Password(data.password, "Password", true, 8, 64));
+                if (accountError != null)
+                    return Json(new { success = false, message = accountError });
+                data.name = InputValidator.CleanText(data.name);
+                data.email = data.email.Trim();
                 if (data.role != 1 && data.role != 2)
                     return Json(new { success = false, message = "Select a valid account role." });
 
@@ -2354,8 +2385,9 @@ namespace WebApplication1.Controllers
             {
                 if (data == null || data.id <= 0)
                     return Json(new { success = false, message = "Invalid account." });
-                if (string.IsNullOrWhiteSpace(data.name))
-                    return Json(new { success = false, message = "Name is required." });
+                string nameError = InputValidator.Name(data.name, "Full name");
+                if (nameError != null)
+                    return Json(new { success = false, message = nameError });
 
                 using (var connect = new DB_Context())
                 {
@@ -2363,13 +2395,14 @@ namespace WebApplication1.Controllers
                     if (target == null)
                         return Json(new { success = false, message = "Account not found." });
 
-                    target.name = data.name.Trim();
+                    target.name = InputValidator.CleanText(data.name);
 
                     // Protect the admin (role 1): lock email + role changes
                     if (target.role != 1)
                     {
-                        if (string.IsNullOrWhiteSpace(data.email) || !data.email.Contains("@"))
-                            return Json(new { success = false, message = "Valid email is required." });
+                        string emailError = InputValidator.Email(data.email, "Email");
+                        if (emailError != null)
+                            return Json(new { success = false, message = emailError });
                         if (data.role != 1 && data.role != 2)
                             return Json(new { success = false, message = "Select a valid account role." });
 
@@ -2386,8 +2419,9 @@ namespace WebApplication1.Controllers
                     // Only change password if a new one was typed
                     if (!string.IsNullOrWhiteSpace(data.password))
                     {
-                        if (data.password.Length < 8)
-                            return Json(new { success = false, message = "Password must be at least 8 characters." });
+                        string passwordError = InputValidator.Password(data.password, "Password", true, 8, 64);
+                        if (passwordError != null)
+                            return Json(new { success = false, message = passwordError });
                         target.password = BCrypt.Net.BCrypt.HashPassword(data.password);   // hashed
                     }
 
@@ -2451,9 +2485,108 @@ namespace WebApplication1.Controllers
                 return a != null ? a.name : email;
             }
         }
+        // Validates the unit form on the server and stores the cleaned values.
+        private static string CheckAndCleanUnit(unit u)
+        {
+            if (u == null) return "Unit data is missing.";
+
+            string error = InputValidator.FirstError(
+                InputValidator.Code(u.unitName, "Unit name", true, 50),
+                InputValidator.Code(u.floor, "Floor", true, 10),
+                InputValidator.Address(u.address, "Address", false, 150),
+                InputValidator.Description(u.description, "Description", false, 100));
+            if (error != null) return error;
+
+            if (u.price <= 0 || u.price > 999999.99m) return "Monthly rent must be greater than 0 and no more than 999999.99.";
+            if (decimal.Round(u.price, 2) != u.price) return "Monthly rent can have at most 2 decimal places.";
+            if (u.sqm < 1 || u.sqm > 9999) return "Size (sqm) must be between 1 and 9999.";
+            if (u.maxOccupants < 1 || u.maxOccupants > 20) return "Max Occupants must be between 1 and 20.";
+            if (!string.IsNullOrEmpty(u.status) && u.status != "active" && u.status != "inactive")
+                return "Please select a valid status.";
+
+            u.unitName = InputValidator.CleanText(u.unitName);
+            u.floor = InputValidator.CleanText(u.floor);
+            u.address = InputValidator.CleanText(u.address);
+            u.description = InputValidator.CleanDescription(u.description);
+            return null;
+        }
+
+        // Creation (id 0) needs a description and category. Status-only updates may leave them out.
+        private static string CheckAndCleanMaintenance(maintenance_request r)
+        {
+            if (r == null) return "Request data is missing.";
+
+            bool isNew = r.id == 0;
+            string error = InputValidator.FirstError(
+                InputValidator.Description(r.description, "Description", isNew, 1000),
+                InputValidator.Code(r.category, "Category", isNew, 100));
+            if (error != null) return error;
+
+            r.description = InputValidator.CleanDescription(r.description);
+            r.category = InputValidator.CleanText(r.category);
+            return null;
+        }
+
         private static bool UsesCoOccupants(int occupancyTypeId)
         {
             return occupancyTypeId == 2 || occupancyTypeId == 3;
+        }
+
+        // Validates the tenant form on the server and stores the cleaned values.
+        // Returns the first message to show, or null when everything is valid.
+        private static string CheckAndCleanTenant(tenant t, List<co_occupant> coOccupants)
+        {
+            if (t == null) return "Tenant data is missing.";
+
+            string error = InputValidator.FirstError(
+                InputValidator.Name(t.name, "Full name"),
+                InputValidator.Email(t.email, "Email"),
+                InputValidator.Phone(t.phone, "Phone number"),
+                InputValidator.Address(t.address, "Address", false, 100),
+                InputValidator.Occupation(t.occupation, "Occupation", false, 25),
+                InputValidator.Password(t.passwordHash, "Portal password", false, 0, 20));
+            if (error != null) return error;
+
+            if (t.occupancyTypeId < 1 || t.occupancyTypeId > 3) return "Please select an Occupancy Type.";
+            if (t.unitId <= 0) return "Please select a unit.";
+            if (t.leaseStart == DateTime.MinValue) return "Lease Start date is required.";
+            if (t.leaseEnd != DateTime.MinValue && t.leaseEnd <= t.leaseStart)
+                return "Lease End date must be after the Lease Start date.";
+
+            var occupants = UsesCoOccupants(t.occupancyTypeId) && coOccupants != null
+                ? coOccupants
+                : new List<co_occupant>();
+
+            for (int i = 0; i < occupants.Count; i++)
+            {
+                var occupant = occupants[i];
+                if (occupant == null) continue;
+
+                // Rows left completely blank are skipped on save.
+                if (string.IsNullOrWhiteSpace(occupant.name) && string.IsNullOrWhiteSpace(occupant.phone)
+                    && string.IsNullOrWhiteSpace(occupant.address)) continue;
+
+                string label = "Occupant #" + (i + 1);
+                error = InputValidator.FirstError(
+                    InputValidator.Name(occupant.name, label + " name"),
+                    InputValidator.Phone(occupant.phone, label + " phone number", true),
+                    InputValidator.Address(occupant.address, label + " address", false, 50));
+                if (error != null) return error;
+            }
+
+            t.name = InputValidator.CleanText(t.name);
+            t.email = t.email.Trim();
+            t.phone = InputValidator.CleanText(t.phone);
+            t.address = InputValidator.CleanText(t.address);
+            t.occupation = InputValidator.CleanText(t.occupation);
+            foreach (var occupant in occupants)
+            {
+                if (occupant == null) continue;
+                occupant.name = InputValidator.CleanText(occupant.name);
+                occupant.phone = InputValidator.CleanText(occupant.phone);
+                occupant.address = InputValidator.CleanText(occupant.address);
+            }
+            return null;
         }
         [HttpGet]
         public JsonResult SchedulerStatus()
@@ -2597,6 +2730,13 @@ namespace WebApplication1.Controllers
                 {
                     return Json(new { success = false, message = "The request status cannot be empty." });
                 }
+
+                string reviewError = InputValidator.Description(data.reviewNotes, "Review note", true, 1000);
+                if (reviewError != null)
+                {
+                    return Json(new { success = false, message = reviewError });
+                }
+                data.reviewNotes = InputValidator.CleanDescription(data.reviewNotes);
 
                 var status = data.status.Trim().ToLowerInvariant();
 

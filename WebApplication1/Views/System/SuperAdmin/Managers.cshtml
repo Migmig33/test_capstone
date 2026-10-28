@@ -284,7 +284,9 @@
                     <label class="block text-xs font-medium text-slate-600 mb-1.5">Full Name</label>
                     <div class="relative">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                        <input id="firstInput" type="text" ng-model="form.name" placeholder="e.g. Maria Santos" class="{{ getInputClass(formErrors.name) }}" />
+                        <input id="firstInput" type="text" ng-model="form.name" placeholder="e.g. Maria Santos"
+                               input-rule="name" input-rule-label="Full name" input-rule-required input-rule-no-message
+                               class="{{ getInputClass(formErrors.name) }}" />
                     </div>
                     <p class="text-xs text-red-500 mt-1" ng-show="formErrors.name">{{ formErrors.name }}</p>
                 </div>
@@ -294,9 +296,10 @@
                     <label class="block text-xs font-medium text-slate-600 mb-1.5">Email Address</label>
                     <div class="relative">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
-                        <input type="email"
+                        <input type="text"
                                ng-model="form.email"
-                               placeholder="manager@greenresidences.com"
+                               placeholder="manager@greenresidences.com" inputmode="email"
+                               input-rule="email" input-rule-label="Email" input-rule-required input-rule-no-message
                                ng-disabled="editTarget.role === 'admin'"
                                class="{{ getInputClass(formErrors.email) }}"
                                ng-class="{'opacity-60 cursor-not-allowed': editTarget.role === 'admin'}" />
@@ -336,6 +339,7 @@
                         <input type="{{ showPassword ? 'text' : 'password' }}"
                                ng-model="form.password"
                                placeholder="{{ modalMode === 'edit' ? 'New password (optional)' : 'Min. 8 characters' }}"
+                               input-rule="password" input-rule-label="Password" input-rule-min="8" input-rule-max="64" input-rule-no-message
                                class="{{ getInputClass(formErrors.password) }} pr-10" />
                         <button type="button" ng-click="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
                             <svg ng-if="!showPassword" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>@ViewBag.Title</title>
+    <title>@(string.IsNullOrEmpty((string)ViewBag.Title) ? "GreenRent" : (string)ViewBag.Title + " - GreenRent")</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -290,8 +290,9 @@
     <script src="~/Scripts/jquery-3.7.0.min.js"></script>
     <script src="~/Scripts/angular.min.js"></script>
     <script src="~/Scripts/Scripts/Module.js"></script>
+    <script src="~/Scripts/Scripts/InputRules.js?v=20261028-input-rules"></script>
     <script src="~/Scripts/Scripts/Service.js"></script>
-    <script src="~/Scripts/Scripts/Controller.js"></script>
+    <script src="~/Scripts/Scripts/Controller.js?v=20261028-input-rules"></script>
     <script src="~/Scripts/Chart.min.js"></script>
     <script src="~/Scripts/angular-chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

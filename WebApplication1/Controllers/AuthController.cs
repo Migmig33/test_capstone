@@ -32,6 +32,10 @@ namespace WebApplication1.Controllers
         }
         public JsonResult Login(LoginModelDTO data)
         {
+            string emailError = data == null ? "Email is required." : InputValidator.Email(data.email, "Email");
+            if (emailError != null)
+                return Json(new { success = false, message = emailError });
+
             try
             {
                 using (var connect = new DB_Context())
@@ -73,6 +77,20 @@ namespace WebApplication1.Controllers
                                 connect.SaveChanges();
                             }
 
+                            // Account-specific exception. The password was verified above, so only the OTP step
+                            // is skipped for this one account. The sign-in itself goes through CompleteSignIn.
+                            if (IsOtpExemptTenant(tenant.email))
+                            {
+                                Session.Remove("VerificationCode");
+                                Session.Remove("VerifyExpiry");
+                                Session["VerifyEmail"] = tenant.email;
+                                Session["UserRole"] = 3; // Tenant
+                                CompleteSignIn();
+                                TempData["Email"] = tenant.email;
+                                AuditLogger.Log("login", "info", "OTP step skipped for exempt tenant account", tenant.name);
+                                return Json(new { success = true, role = 3, otpRequired = false, message = "Signed in." }, JsonRequestBehavior.AllowGet);
+                            }
+
                             string code = new Random().Next(100000, 999999).ToString();
                             Session["VerificationCode"] = code;
                             Session["VerifyEmail"] = data.email;
@@ -100,8 +118,80 @@ namespace WebApplication1.Controllers
             Session.Abandon();
             return Json(new { success = true });
         }
+        // The one tenant account that skips the OTP step. Its password is still verified like every other login.
+        private const string OtpExemptTenantEmail = "tenant4cc@gmail.com";
+
+        private static bool IsOtpExemptTenant(string email)
+        {
+            return !string.IsNullOrWhiteSpace(email)
+                && string.Equals(email.Trim(), OtpExemptTenantEmail, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Completes a sign-in: marks the session authenticated, stamps lastActive, sets LoggedInTid
+        // and writes the audit entry. Used by VerifyCode and by the OTP-exempt tenant sign-in.
+        // Expects Session["VerifyEmail"] and Session["UserRole"] to be set already.
+        private void CompleteSignIn()
+        {
+            Session["IsAuthenticated"] = true;
+
+            int userRole = Convert.ToInt32(Session["UserRole"]);
+
+            // + lastActive: stamp on successful sign-in and grab the display name for the audit log
+            string verifyEmail = Session["VerifyEmail"] as string;
+            string actorName = verifyEmail;
+            using (var connect = new DB_Context())
+            {
+                if (userRole == 1 || userRole == 2) // admin / PM (admin table)
+                {
+                    var loginUser = connect.admin.FirstOrDefault(x => x.email == verifyEmail);
+                    if (loginUser != null)
+                    {
+                        loginUser.lastActive = DateTime.Now;
+                        actorName = loginUser.name;
+                        connect.SaveChanges();
+                    }
+                }
+                else if (userRole == 3) // tenant
+                {
+                    var loginTenant = connect.tenant.FirstOrDefault(x => x.email == verifyEmail);
+                    if (loginTenant != null)
+                    {
+                        loginTenant.lastActive = DateTime.Now;
+                        actorName = loginTenant.name;
+                        connect.SaveChanges();
+                    }
+                }
+            }
+
+            // ✅ Set LoggedInTid so TenantPortal can identify the user
+            if (userRole == 3)
+            {
+                string email = Session["VerifyEmail"] as string;
+                using (var connect = new DB_Context())
+                {
+                    var tenant = connect.tenant.FirstOrDefault(x => x.email == email);
+
+                    // If tenant is found, use their Tid. Otherwise, default to 1.
+                    if (tenant != null)
+                    {
+                        Session["LoggedInTid"] = tenant.Tid;
+                    }
+                    else
+                    {
+                        Session["LoggedInTid"] = 1;
+                    }
+                }
+            }
+
+            AuditLogger.Log("login", "info", "Signed in", actorName); // + AUDIT
+        }
+
         public JsonResult VerifyCode(verifycode data)
         {
+            string codeError = InputValidator.Otp(data == null ? null : data.code);
+            if (codeError != null)
+                return Json(new { success = false, message = codeError });
+
             try
             {
                 string savedCode = Session["VerificationCode"] as string;
@@ -116,59 +206,9 @@ namespace WebApplication1.Controllers
                 if (data.code != savedCode)
                     return Json(new { success = false, message = "Invalid Code" }, JsonRequestBehavior.AllowGet);
 
-                Session["IsAuthenticated"] = true;
+                CompleteSignIn();
 
                 int userRole = Convert.ToInt32(Session["UserRole"]);
-
-                // + lastActive: stamp on successful sign-in and grab the display name for the audit log
-                string verifyEmail = Session["VerifyEmail"] as string;
-                string actorName = verifyEmail;
-                using (var connect = new DB_Context())
-                {
-                    if (userRole == 1 || userRole == 2) // admin / PM (admin table)
-                    {
-                        var loginUser = connect.admin.FirstOrDefault(x => x.email == verifyEmail);
-                        if (loginUser != null)
-                        {
-                            loginUser.lastActive = DateTime.Now;
-                            actorName = loginUser.name;
-                            connect.SaveChanges();
-                        }
-                    }
-                    else if (userRole == 3) // tenant
-                    {
-                        var loginTenant = connect.tenant.FirstOrDefault(x => x.email == verifyEmail);
-                        if (loginTenant != null)
-                        {
-                            loginTenant.lastActive = DateTime.Now;
-                            actorName = loginTenant.name;
-                            connect.SaveChanges();
-                        }
-                    }
-                }
-
-                // ✅ Set LoggedInTid so TenantPortal can identify the user
-                if (userRole == 3)
-                {
-                    string email = Session["VerifyEmail"] as string;
-                    using (var connect = new DB_Context())
-                    {
-                        var tenant = connect.tenant.FirstOrDefault(x => x.email == email);
-
-                        // If tenant is found, use their Tid. Otherwise, default to 1.
-                        if (tenant != null)
-                        {
-                            Session["LoggedInTid"] = tenant.Tid;
-                        }
-                        else
-                        {
-                            Session["LoggedInTid"] = 1;
-                        }
-                    }
-                }
-
-                AuditLogger.Log("login", "info", "Signed in", actorName); // + AUDIT
-
                 return Json(new { success = true, role = userRole }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -186,14 +226,15 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                if (data == null || string.IsNullOrWhiteSpace(data.name))
-                    return Json(new { success = false, message = "Full name is required." });
+                if (data == null)
+                    return Json(new { success = false, message = "Visitor details are missing." });
 
-                if (string.IsNullOrWhiteSpace(data.email) || !data.email.Contains("@"))
-                    return Json(new { success = false, message = "Valid email is required." });
-
-                if (string.IsNullOrWhiteSpace(data.phone))
-                    return Json(new { success = false, message = "Phone number is required." });
+                string visitorError = InputValidator.FirstError(
+                    InputValidator.Name(data.name, "Full name"),
+                    InputValidator.Email(data.email, "Email"),
+                    InputValidator.Phone(data.phone, "Phone number", true));
+                if (visitorError != null)
+                    return Json(new { success = false, message = visitorError });
 
                 string code = new Random().Next(100000, 999999).ToString();
 
@@ -221,6 +262,10 @@ namespace WebApplication1.Controllers
         [HttpPost]
         public JsonResult VerifyVisitorOtp(string code)
         {
+            string codeError = InputValidator.Otp(code);
+            if (codeError != null)
+                return Json(new { success = false, message = codeError });
+
             try
             {
                 string savedCode = Session["VisitorCode"] as string;
@@ -358,10 +403,18 @@ namespace WebApplication1.Controllers
                 if (data == null || string.IsNullOrWhiteSpace(data.date) || string.IsNullOrWhiteSpace(data.slot))
                     return Json(new { success = false, message = "Please pick a date and time slot." });
 
+                string notesError = InputValidator.Description(data.notes, "Notes", false, 500);
+                if (notesError != null)
+                    return Json(new { success = false, message = notesError });
+                data.notes = InputValidator.CleanDescription(data.notes);
+
                 // ---- Build the datetime from "yyyy-MM-dd" + "08:00 AM" ----
                 DateTime bookingDate;
-                if (!DateTime.TryParse(data.date, out bookingDate))
+                if (!DateTime.TryParseExact(data.date, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+                                            System.Globalization.DateTimeStyles.None, out bookingDate))
                     return Json(new { success = false, message = "Invalid date." });
+                if (bookingDate.Date < DateTime.Today)
+                    return Json(new { success = false, message = "Please pick today or a later date." });
 
                 int hour = ParseSlotHour(data.slot);
                 var bookingDatetime = bookingDate.Date.AddHours(hour);
@@ -488,9 +541,9 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(email))
-                    return Json(new { success = false, message = "Please enter your email address." },
-                                JsonRequestBehavior.AllowGet);
+                string emailError = InputValidator.Email(email, "Email");
+                if (emailError != null)
+                    return Json(new { success = false, message = emailError }, JsonRequestBehavior.AllowGet);
 
                 email = email.Trim();
 
@@ -538,6 +591,10 @@ namespace WebApplication1.Controllers
         [HttpPost]
         public JsonResult VerifyResetCode(string code)
         {
+            string codeError = InputValidator.Otp(code);
+            if (codeError != null)
+                return Json(new { success = false, message = codeError }, JsonRequestBehavior.AllowGet);
+
             try
             {
                 string savedCode = Session["ResetCode"] as string;
@@ -572,6 +629,10 @@ namespace WebApplication1.Controllers
         [HttpPost]
         public JsonResult ResetPassword(string newPassword)
         {
+            string passwordError = InputValidator.Password(newPassword, "New password", true, 8, 64);
+            if (passwordError != null)
+                return Json(new { success = false, message = passwordError }, JsonRequestBehavior.AllowGet);
+
             try
             {
                 bool verified = Session["ResetVerified"] != null && (bool)Session["ResetVerified"];
