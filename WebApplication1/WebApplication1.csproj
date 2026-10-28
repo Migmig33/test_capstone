@@ -390,7 +390,7 @@
     <Content Include="LinqToDB.Templates\DataAnnotations.ttinclude" />
     <Content Include="LinqToDB.Templates\!ReadMe.LinqToDB.md" />
     <Content Include="LinqToDB.Templates\LinqToDB.MySql.Tools.ttinclude" />
-    <Content Include="Appsettings.Local.config" />
+    <Content Include="Appsettings.Local.config" Condition="Exists('Appsettings.Local.config')" />
     <None Include="Properties\PublishProfiles\site88161-WebDeploy.pubxml" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <Content Include="Scripts\i18n\angular-locale_af-na.js" />
