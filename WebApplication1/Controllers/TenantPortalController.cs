@@ -97,7 +97,7 @@ namespace WebApplication1.Controllers
                                       resolvedDate = m.resolvedDate.HasValue
                                                      ? m.resolvedDate.Value.ToString("yyyy-MM-dd")
                                                      : null,
-                                     scheduledDate = m.scheduledDate.HasValue ? m.resolvedDate.Value.ToString("yyyy-MM-dd") : null
+                                     scheduledDate = m.scheduledDate.HasValue ? m.scheduledDate.Value.ToString("yyyy-MM-dd") : null
                                   });
 
                 return Json(requests, JsonRequestBehavior.AllowGet);

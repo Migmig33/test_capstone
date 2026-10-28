@@ -1951,11 +1951,18 @@
     };
 
     $scope.loadPortalData = function (tid) {
+        // A failed request is shown as an error, not as an empty list.
+        $scope.maintenanceLoadFailed = false;
+        $scope.paymentsLoadFailed = false;
+
         $http.get('/TenantPortal/GetMaintenanceRequests?tid=' + tid).then(function (res) {
             var maintenance = res.data || [];
             $scope.myMaintenance = maintenance.sort(function (a, b) {
                 return new Date(b.reportedDate).getTime() - new Date(a.reportedDate).getTime();
             });
+        }).catch(function () {
+            $scope.myMaintenance = [];
+            $scope.maintenanceLoadFailed = true;
         });
 
         $http.get('/TenantPortal/GetPayments?tid=' + tid).then(function (res) {
@@ -1967,6 +1974,10 @@
             $scope.latestPayment = $scope.myPayments[$scope.myPayments.length - 1] || null;
             $scope.paidPaymentsCount = $scope.myPayments.filter(function (p) { return p.status === 'Paid'; }).length;
             $scope.unpaidPaymentsCount = $scope.myPayments.filter(function (p) { return p.status === 'Unpaid'; }).length;
+        }).catch(function () {
+            $scope.myPayments = [];
+            $scope.latestPayment = null;
+            $scope.paymentsLoadFailed = true;
         });
 
         if ($scope.currentTenant.leaseEnd) {
@@ -1990,9 +2001,12 @@
   
     $scope.handleLogout = function (wasTerminated) {
         $http.post('/Auth/Logout').then(function () {
-            $window.location.href = '/System/Auth';
             if (wasTerminated) {
+                // Show the notice first. An immediate redirect would hide it.
                 $scope.showToast("Your account has been terminated. Please contact the property management office.", "error");
+                $timeout(function () { $window.location.href = '/System/Auth'; }, 3000);
+            } else {
+                $window.location.href = '/System/Auth';
             }
         });
     };
@@ -2058,7 +2072,6 @@
             priority: "Medium",
             reportedDate: new Date().toISOString()
         };
-        console.log(newRequest);
         if ($scope.reqPhoto) {
             newRequest.reqPhoto = $scope.reqPhoto;
         }
@@ -2096,6 +2109,14 @@
         return "border-l-4 border-amber-400 bg-amber-50/40";
     };
 
+    // Maintenance dates come from the server as yyyy-MM-dd. Show them as e.g. "Oct 28, 2026".
+    $scope.formatPortalDate = function (dateStr) {
+        if (!dateStr) return "";
+        var d = new Date(dateStr + "T00:00:00");
+        if (isNaN(d.getTime())) return dateStr;
+        return d.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
+    };
+
     $scope.getMaintenanceStatusClass = function (status) {
         if (status === "Resolved") return "bg-emerald-50 text-emerald-700";
         if (status === "In Progress") return "bg-green-50 text-green-700";
@@ -2123,7 +2144,30 @@
     $scope.browsePriceMax = '';
 
     $scope.browseShowFilters = false;
-    $scope.bannerDismissed = false;
+
+    // Welcome banner on Browse. The flag lives on an object so the ng-if child scope and the
+    // close button update the same value. The dismissal is saved in localStorage under its own key.
+    var BROWSE_BANNER_KEY = 'greenResidencesBrowseWelcomeDismissed';
+
+    function readBrowseBannerDismissed() {
+        try {
+            return window.localStorage.getItem(BROWSE_BANNER_KEY) === '1';
+        } catch (e) {
+            // localStorage can be blocked or unavailable. The banner then shows on each load, and the page still works.
+            return false;
+        }
+    }
+
+    $scope.browseBanner = { dismissed: readBrowseBannerDismissed() };
+
+    $scope.dismissBrowseBanner = function () {
+        $scope.browseBanner.dismissed = true;
+        try {
+            window.localStorage.setItem(BROWSE_BANNER_KEY, '1');
+        } catch (e) {
+            // Storage unavailable: the banner is still hidden for this page view.
+        }
+    };
 
     $scope.BED_OPTIONS = [];
     $scope.AMENITY_OPTIONS = [];
@@ -3450,14 +3494,24 @@
     };
 
 
+    // Submits the profile-change request. Called from the reason modal's Submit button.
+    $scope.confirmProfileChange = function () {
+        if ($scope.isSavingProfile) return;
+        $scope.handleSaveProfile();
+    };
+
     $scope.handleSaveProfile = function () {
+        if ($scope.isSavingProfile) return;
+
         // ---- Validation ----
         if ($scope.hasInvalidInputs('profile')) return;
 
-        if (!reason || !reason.trim()) {
-
+        var reason = ($scope.profileChangeReason || '').trim();
+        if (!reason) {
             return $scope.showToast("Please enter a reason for the profile change", "error");
         }
+
+        $scope.isSavingProfile = true;
 
         var data = {
             id: $scope.id,

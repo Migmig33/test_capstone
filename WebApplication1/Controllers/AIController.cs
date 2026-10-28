@@ -37,7 +37,7 @@ namespace WebApplication1.Controllers
                     var allCoOccupants = connect.co_occupant.ToList();
 
                     var dbContext = $@"
-                                === GREENRENT LIVE DATA ===
+                                === GREEN RESIDENCES LIVE DATA ===
 
                                 UNITS ({allUnits.Count} total):
                                 {string.Join("\n", allUnits.Select(u => {
@@ -102,7 +102,7 @@ namespace WebApplication1.Controllers
                     {
                         systemInstruction = new
                         {
-                            parts = new[] { new { text = $@"You are a helpful assistant for GreenRent. 
+                            parts = new[] { new { text = $@"You are a helpful assistant for Green Residences. 
                                                     You help tenants and guests with inquiries about units, bookings, payments, and maintenance requests. 
                                                     Be friendly and concise.
                                                     IMPORTANT: Do not use any markdown formatting. 
@@ -211,7 +211,7 @@ namespace WebApplication1.Controllers
                     var allAmenityNames = connect.amenity.Select(a => a.name).ToList();
 
                     var unitContext = $@"
-                                === GREENRENT — AVAILABLE UNITS ===
+                                === GREEN RESIDENCES — AVAILABLE UNITS ===
  
                                 VACANT UNITS ({vacantUnits.Count} available):
                                 {(vacantUnits.Any()
@@ -252,7 +252,7 @@ namespace WebApplication1.Controllers
                     {
                         systemInstruction = new
                         {
-                            parts = new[] { new { text = $@"You are GreenBot, a friendly leasing assistant for GreenRent.
+                            parts = new[] { new { text = $@"You are GreenBot, a friendly leasing assistant for Green Residences.
                                                     You are talking to a prospective renter browsing the website.
                                                     Help them find a unit that fits their budget, unit type, and amenity needs.
  
