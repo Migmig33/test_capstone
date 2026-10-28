@@ -17,7 +17,7 @@ namespace WebApplication1.Services
             // Make sure to handle exceptions and configure your SMTP settings properly
 
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("GreenRent", ConfigurationManager.AppSettings["SmtpUser"]));
+            message.From.Add(new MailboxAddress("Green Residences", ConfigurationManager.AppSettings["SmtpUser"]));
             message.To.Add(new MailboxAddress("", toEmail));
             message.Subject = "Your Verification Code";
 
@@ -41,7 +41,7 @@ namespace WebApplication1.Services
             <h1 style='letter-spacing: 12px; color: #4F46E5; margin: 0; font-size: 36px;'>{code}</h1>
         </div>
         <p style='color: #334155; font-size: 14px;'>This code expires in <strong>5 minutes</strong>.</p>
-        <p style='color: #94a3b8; font-size: 13px; margin-top: 24px;'>— GreenRent Team</p>
+        <p style='color: #94a3b8; font-size: 13px; margin-top: 24px;'>— Green Residences Team</p>
     </div>
 </div>"
 
@@ -65,7 +65,7 @@ namespace WebApplication1.Services
         public static void SendBookingConfirmed(string toEmail, string guestName, string unitName, DateTime bookingDatetime)
         {
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("GreenRent", ConfigurationManager.AppSettings["SmtpUser"]));
+            message.From.Add(new MailboxAddress("Green Residences", ConfigurationManager.AppSettings["SmtpUser"]));
             message.To.Add(new MailboxAddress("", toEmail));
             message.Subject = "Your Viewing Schedule is Confirmed!";
             message.Body = new TextPart("html")
@@ -94,7 +94,7 @@ namespace WebApplication1.Services
             <p style='margin: 0; color: #0f172a; font-size: 15px; font-weight: bold;'>{bookingDatetime:MMMM dd, yyyy hh:mm tt}</p>
         </div>
         <p style='color: #334155; font-size: 14px;'>Please be on time. If you need to reschedule, contact us as soon as possible.</p>
-        <p style='color: #94a3b8; font-size: 13px; margin-top: 24px;'>— GreenRent Team</p>
+        <p style='color: #94a3b8; font-size: 13px; margin-top: 24px;'>— Green Residences Team</p>
     </div>
 </div>"
             };
@@ -118,7 +118,7 @@ namespace WebApplication1.Services
         public static void SendBookingDeclined(string toEmail, string guestName, string unitName, DateTime bookingDatetime, string reason)
         {
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("GreenRent", ConfigurationManager.AppSettings["SmtpUser"]));
+            message.From.Add(new MailboxAddress("Green Residences", ConfigurationManager.AppSettings["SmtpUser"]));
             message.To.Add(new MailboxAddress("", toEmail));
             message.Subject = "Update on Your Viewing Schedule";
             message.Body = new TextPart("html")
@@ -149,7 +149,7 @@ namespace WebApplication1.Services
             <p style='margin: 0; color: #dc2626; font-size: 15px;'>{reason}</p>
         </div>
         <p style='color: #334155; font-size: 14px;'>You may book another schedule at your convenience. We apologize for the inconvenience.</p>
-        <p style='color: #94a3b8; font-size: 13px; margin-top: 24px;'>— GreenRent Team</p>
+        <p style='color: #94a3b8; font-size: 13px; margin-top: 24px;'>— Green Residences Team</p>
     </div>
 </div>"
             };
@@ -173,7 +173,7 @@ namespace WebApplication1.Services
         public static void SendBookingReceipt(string toEmail, string guestName, string unitName, DateTime bookingDatetime, string notes)
         {
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("GreenRent", ConfigurationManager.AppSettings["SmtpUser"]));
+            message.From.Add(new MailboxAddress("Green Residences", ConfigurationManager.AppSettings["SmtpUser"]));
             message.To.Add(new MailboxAddress("", toEmail));
             message.Subject = "We received your viewing request";
 
@@ -206,7 +206,7 @@ namespace WebApplication1.Services
             <p style='margin: 0; color: #0f172a; font-size: 15px; font-weight: bold;'>{bookingDatetime:MMMM dd, yyyy hh:mm tt}</p>{notesBlock}
         </div>
         <p style='color: #334155; font-size: 14px;'>No payment is required to book a viewing. Site inspection is free.</p>
-        <p style='color: #94a3b8; font-size: 13px; margin-top: 24px;'>— GreenRent Team</p>
+        <p style='color: #94a3b8; font-size: 13px; margin-top: 24px;'>— Green Residences Team</p>
     </div>
 </div>"
             };

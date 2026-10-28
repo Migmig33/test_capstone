@@ -11,11 +11,11 @@
     </span>
 </div>
 
-<div class="min-h-screen bg-slate-100 flex font-sans text-slate-900"
+<div class="min-h-screen bg-slate-100 flex flex-col lg:flex-row font-sans text-slate-900"
      ng-init="isLoading = true; init()">
 
     <!-- LEFT SIDEBAR -->
-    <aside class="w-72 sm:w-80 bg-gradient-to-b from-green-700 to-green-900 text-white p-8 flex flex-col flex-shrink-0 fixed h-screen overflow-y-auto z-10 shadow-xl border-r border-green-800">
+    <aside class="w-full lg:w-80 bg-gradient-to-b from-green-700 to-green-900 text-white p-6 lg:p-8 flex flex-col flex-shrink-0 relative lg:fixed lg:h-screen lg:overflow-y-auto z-10 shadow-xl border-r border-green-800">
 
         <button type="button"
                 ng-click="handleLogout()"
@@ -156,13 +156,13 @@
                  class="flex flex-col space-y-4">
 
                 <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-bold text-green-300 uppercase tracking-widest">
+                    <label for="tp-email" class="text-[10px] font-bold text-green-300 uppercase tracking-widest">
                         Email Address
                     </label>
                     <div class="relative">
                         <lucide-icon name="mail" size="14" class="absolute left-3 top-3 text-green-500"></lucide-icon>
                         <input type="text" inputmode="email"
-                               ng-model="currentTenant.email"
+                               ng-model="currentTenant.email" id="tp-email"
                                input-rule="email" input-rule-label="Email" input-rule-required input-rule-group="profile"
                                class="w-full bg-green-900/40 border border-green-600/50 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400 transition-all placeholder-green-700"
                                placeholder="Enter email">
@@ -170,13 +170,13 @@
                 </div>
 
                 <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-bold text-green-300 uppercase tracking-widest">
+                    <label for="tp-phone" class="text-[10px] font-bold text-green-300 uppercase tracking-widest">
                         Phone Number
                     </label>
                     <div class="relative">
                         <lucide-icon name="phone" size="14" class="absolute left-3 top-3 text-green-500"></lucide-icon>
                         <input type="text" inputmode="numeric"
-                               ng-model="currentTenant.phone"
+                               ng-model="currentTenant.phone" id="tp-phone"
                                input-rule="phone" input-rule-label="Phone number" input-rule-required input-rule-group="profile"
                                class="w-full bg-green-900/40 border border-green-600/50 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400 transition-all placeholder-green-700"
                                placeholder="Enter phone number">
@@ -184,13 +184,13 @@
                 </div>
 
                 <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-bold text-green-300 uppercase tracking-widest">
+                    <label for="tp-occupation" class="text-[10px] font-bold text-green-300 uppercase tracking-widest">
                         Occupation
                     </label>
                     <div class="relative">
                         <lucide-icon name="briefcase" size="14" class="absolute left-3 top-3 text-green-500"></lucide-icon>
                         <input type="text"
-                               ng-model="currentTenant.occupation"
+                               ng-model="currentTenant.occupation" id="tp-occupation"
                                input-rule="occupation" input-rule-label="Occupation" input-rule-required input-rule-group="profile"
                                class="w-full bg-green-900/40 border border-green-600/50 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400 transition-all placeholder-green-700"
                                placeholder="Enter occupation">
@@ -198,12 +198,12 @@
                 </div>
 
                 <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-bold text-green-300 uppercase tracking-widest">
+                    <label for="tp-address" class="text-[10px] font-bold text-green-300 uppercase tracking-widest">
                         Address
                     </label>
                     <div class="relative">
                         <lucide-icon name="map-pin" size="14" class="absolute left-3 top-3.5 text-green-500"></lucide-icon>
-                        <textarea ng-model="currentTenant.address"
+                        <textarea ng-model="currentTenant.address" id="tp-address"
                                   rows="3"
                                   input-rule="address" input-rule-label="Address" input-rule-required input-rule-max="150" input-rule-group="profile"
                                   class="w-full bg-green-900/40 border border-green-600/50 rounded-xl pl-9 pr-3 py-2.5 text-sm text-white focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400 transition-all placeholder-green-700 resize-none"
@@ -231,7 +231,7 @@
     </aside>
 
     <!-- RIGHT CONTENT AREA -->
-    <main class="flex-1 ml-72 sm:ml-80 p-8 sm:p-12 flex flex-col min-h-screen">
+    <main class="flex-1 min-w-0 lg:ml-80 p-4 sm:p-8 lg:p-12 flex flex-col min-h-screen">
 
         <!-- HEADER -->
         <div class="flex justify-end items-center mb-8 bg-white px-6 py-4 rounded-2xl shadow-sm border border-slate-200 w-full">
@@ -240,7 +240,7 @@
                     <lucide-icon name="building-2" size="16" class="text-white"></lucide-icon>
                 </div>
                 <span class="text-xl font-bold tracking-tight text-slate-900">
-                    Green<span class="text-green-600">Rent</span>
+                    Green<span class="text-green-600">Residences</span>
                     <span class="text-slate-400 text-xs ml-1.5 font-normal">
                         Tenant Portal
                     </span>
@@ -264,9 +264,9 @@
             <div class="w-full bg-gradient-to-r from-green-600 to-green-700 rounded-3xl p-8 sm:p-10 text-white shadow-xl flex items-center justify-between flex-wrap gap-6 fade-in-up">
                 <div>
                     <p class="text-green-200 text-sm mb-1">
-                        Welcome back, Tenant
+                        Welcome back
                         <span class="text-white">
-                            {{ currentTenant.id | uppercase }}
+                            · Tenant ID {{ currentTenant.tenantNumber || currentTenant.Tid }}
                         </span>
                     </p>
                     <h2 class="text-white mb-4 text-3xl font-bold">
@@ -278,16 +278,16 @@
                             {{ currentTenant.unit }}
                         </span>
 
-                        <app-status-badge status="liveStatus"></app-status-badge>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
+                              ng-class="{'bg-white/15 text-white': liveStatus === 'active', 'bg-amber-100 text-amber-800': liveStatus === 'expiring', 'bg-red-100 text-red-700': liveStatus === 'inactive'}">
+                            {{ liveStatus === 'expiring' ? 'Lease expiring soon' : (liveStatus === 'inactive' ? 'Lease expired' : 'Active lease') }}
+                        </span>
 
                         <span ng-if="latestPayment"
                               class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium"
-                              ng-class="{'bg-emerald-500/20 text-emerald-200': latestPayment.status === 'Paid'}">
+                              ng-class="latestPayment.status === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
                             <lucide-icon name="credit-card" size="11"></lucide-icon>
-                            <span ng-class="latestPayment.status === 'Paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'"
-                                  class="px-3 py-1 rounded-full text-xs font-medium">
-                                {{ latestPayment.status === 'Paid' ? 'Rent Paid' : 'Rent Unpaid' }}
-                            </span>
+                            {{ latestPayment.status === 'Paid' ? 'Rent Paid' : 'Rent Unpaid' }}
                         </span>
                     </div>
                 </div>
@@ -306,9 +306,9 @@
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-10 w-full">
 
                 <section id="lease-details" class="fade-in-up delay-1">
-                    <p class="text-slate-500 font-bold uppercase tracking-wider text-xs mb-4 ml-2">
+                    <h2 class="text-slate-500 font-bold uppercase tracking-wider text-xs mb-4 ml-2">
                         Lease Details
-                    </p>
+                    </h2>
                     <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm h-full w-full">
                         <div class="grid grid-cols-2 gap-6">
 
@@ -359,9 +359,9 @@
 
                 <!-- PAYMENT HISTORY -->
                 <section id="payments" class="fade-in-up delay-2">
-                    <p class="text-slate-500 font-bold uppercase tracking-wider text-xs mb-4 ml-2">
+                    <h2 class="text-slate-500 font-bold uppercase tracking-wider text-xs mb-4 ml-2">
                         Payment History
-                    </p>
+                    </h2>
                     <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm h-full flex flex-col w-full">
 
                         <div class="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
@@ -372,7 +372,13 @@
                             </span>
                         </div>
 
-                        <p ng-if="myPayments.length === 0"
+                        <p ng-if="paymentsLoadFailed"
+                           role="alert"
+                           class="text-red-600 text-sm flex-1 flex items-center justify-center text-center">
+                            Payment records could not be loaded. Refresh the page to try again.
+                        </p>
+
+                        <p ng-if="!paymentsLoadFailed && myPayments.length === 0"
                            class="text-slate-400 text-sm flex-1 flex items-center justify-center">
                             No payment records found.
                         </p>
@@ -428,9 +434,9 @@
             <section id="maintenance" class="fade-in-up delay-3 w-full">
 
                 <div class="flex items-center justify-between mb-4 px-2">
-                    <p class="text-slate-500 font-bold uppercase tracking-wider text-xs">
+                    <h2 class="text-slate-500 font-bold uppercase tracking-wider text-xs">
                         Maintenance Requests
-                    </p>
+                    </h2>
 
                     <button type="button"
                             ng-click="toggleRequestForm()"
@@ -496,7 +502,13 @@
                         </div>
                     </div>
 
-                    <div ng-if="myMaintenance.length === 0"
+                    <div ng-if="maintenanceLoadFailed"
+                         role="alert"
+                         class="text-center py-8 text-red-600 text-sm">
+                        Maintenance requests could not be loaded. Refresh the page to try again.
+                    </div>
+
+                    <div ng-if="!maintenanceLoadFailed && myMaintenance.length === 0"
                          class="text-center py-8">
                         <lucide-icon name="wrench" size="28" class="text-slate-200 mx-auto mb-2"></lucide-icon>
                         <p class="text-slate-400 text-sm">
@@ -532,9 +544,9 @@
                                 </span>
 
                                 <p class="text-xs text-slate-400 mt-2">
-                                    Reported: {{ m.reportedDate }}
+                                    Reported: {{ formatPortalDate(m.reportedDate) }}
                                     <span ng-if="m.resolvedDate">
-                                        · Resolved: {{ m.resolvedDate }}
+                                        · Resolved: {{ formatPortalDate(m.resolvedDate) }}
                                     </span>
                                 </p>
 
@@ -609,11 +621,15 @@
 
 <div ng-show="showProfileReasonModal"
      ng-cloak
+     ng-click="closeProfileReasonModal()"
      class="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
 
     <div role="dialog"
          aria-modal="true"
          aria-labelledby="profileReasonTitle"
+         tabindex="-1"
+         ng-click="$event.stopPropagation()"
+         ng-keydown="$event.key === 'Escape' && closeProfileReasonModal()"
          class="w-full max-w-lg rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 shadow-2xl">
 
         <!-- Modal Header -->
@@ -631,6 +647,14 @@
                     Tenant Profile Request
                 </p>
             </div>
+
+            <button type="button"
+                    ng-click="closeProfileReasonModal()"
+                    ng-disabled="isSavingProfile"
+                    aria-label="Close"
+                    class="ml-auto p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors disabled:opacity-50">
+                <lucide-icon name="x" size="18"></lucide-icon>
+            </button>
         </div>
 
         <p class="text-sm leading-6 text-slate-600">
